@@ -1,30 +1,33 @@
 package tacos.web;
 
-import tacos.Order;
-import tacos.User;
-import tacos.data.OrderRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
+import tacos.Order;
+import tacos.User;
+import tacos.data.OrderRepository;
 
 import javax.validation.Valid;
 
-@Slf4j
 @Controller
 @RequestMapping("/orders")
 @SessionAttributes("order")
 public class OrderController {
     private OrderRepository orderRepo;
 
+    @ModelAttribute(name = "order")
+    public Order order() {
+        return new Order();
+    }
+
     public OrderController(OrderRepository orderRepo) {
         this.orderRepo = orderRepo;
     }
 
     @GetMapping("/current")
-    public String orderFrom(@AuthenticationPrincipal User user,
+        public String orderFrom(@AuthenticationPrincipal User user,
                             @ModelAttribute Order order){
         if (order.getDeliveryName() == null) {
             order.setDeliveryName(user.getFullname());

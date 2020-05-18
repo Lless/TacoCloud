@@ -1,6 +1,5 @@
 package tacos.web;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Controller
 @RequestMapping("/design")
 @SessionAttributes("order")
@@ -45,23 +43,19 @@ public class DesignTacoController {
         return new Taco();
     }
 
+    @ModelAttribute(name = "user")
+    public User user( @AuthenticationPrincipal User user) {return user;}
+
     @GetMapping
-    public String showDesignForm(Model model, @AuthenticationPrincipal User user) {
-        List<Ingredient> ingredients = new ArrayList<>();
-        ingredientRepo.findAll().forEach(ingredients::add);
-        Type[] types = Ingredient.Type.values();
-        for (Type type : types) {
-            model.addAttribute(type.toString().toLowerCase(),
-                    filterByType(ingredients, type));
-        }
-        model.addAttribute("user", user);
-        model.addAttribute("design", new Taco());
+    public String showDesignForm(Model model) {
+        setIngredientFields(model);
         return "design";
     }
 
     @PostMapping
-    public String processDesign(@Valid Taco design, Errors errors, @ModelAttribute Order order) {
+    public String processDesign(@Valid Taco design, Errors errors, @ModelAttribute Order order, Model model) {
         if (errors.hasErrors()) {
+            setIngredientFields(model);
             return "design";
         }
         Taco saved = designRepo.save(design);
@@ -75,5 +69,15 @@ public class DesignTacoController {
                 .stream()
                 .filter(x -> x.getType().equals(type))
                 .collect(Collectors.toList());
+    }
+
+    private void setIngredientFields(Model model) {
+        List<Ingredient> ingredients = new ArrayList<>();
+        ingredientRepo.findAll().forEach(ingredients::add);
+        Type[] types = Ingredient.Type.values();
+        for (Type type : types) {
+            model.addAttribute(type.toString().toLowerCase(),
+                    filterByType(ingredients, type));
+        }
     }
 }
